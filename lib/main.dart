@@ -1,21 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:camera/camera.dart';
-import 'package:firebase_core/firebase_core.dart'; // Add this
-import 'firebase_options.dart'; // Add this (auto-generated file)
-import 'dashboard_screen.dart'; // Adjusted path based on your folder structure
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'core/theme/app_theme.dart';
+import 'core/routing/app_router.dart';
 
-late List<CameraDescription> cameras;
-
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // 1. Initialize Firebase FIRST
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
-  // 2. Then fetch cameras
-  cameras = await availableCameras();
+  await dotenv.load(fileName: ".env");
+  // Firebase.initializeApp() is safely omitted for this pure UI testing phase
   
   runApp(const FoodSaverApp());
 }
@@ -25,17 +16,11 @@ class FoodSaverApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'FoodSaver',
+      theme: AppTheme.lightTheme,
+      routerConfig: appRouter,
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-      ),
-      home: const DashboardScreen(), // Pointing to your Dashboard wrapper
     );
   }
 }

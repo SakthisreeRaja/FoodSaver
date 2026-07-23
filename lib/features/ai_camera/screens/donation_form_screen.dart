@@ -1,129 +1,147 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/components/primary_button.dart';
 
-class DonationFormScreen extends StatefulWidget {
-  final String aiAnalysisResult;
-
-  const DonationFormScreen({super.key, required this.aiAnalysisResult});
-
-  @override
-  State<DonationFormScreen> createState() => _DonationFormScreenState();
-}
-
-class _DonationFormScreenState extends State<DonationFormScreen> {
-  late TextEditingController _descriptionController;
-  late TextEditingController _locationController;
-  bool _isSubmitting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // Pre-fill the text box with Gemini's analysis
-    _descriptionController = TextEditingController(text: widget.aiAnalysisResult);
-    // Pre-fill a default test location to speed up your debugging
-    _locationController = TextEditingController(text: 'Malayambakkam, Tamil Nadu, India');
-  }
-
-  @override
-  void dispose() {
-    _descriptionController.dispose();
-    _locationController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submitDonation() async {
-    if (_descriptionController.text.isEmpty || _locationController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill out all fields')),
-      );
-      return;
-    }
-
-    setState(() {
-      _isSubmitting = true;
-    });
-
-    try {
-      // 1. Write the data to Firebase Firestore
-      await FirebaseFirestore.instance.collection('donations').add({
-        'description': _descriptionController.text,
-        'location': _locationController.text,
-        'timestamp': FieldValue.serverTimestamp(),
-        'status': 'available', 
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Donation posted successfully!')),
-        );
-        // 2. Return to the dashboard
-        Navigator.of(context).pop();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Firebase Error: $e')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-        });
-      }
-    }
-  }
+class DonationFormScreen extends StatelessWidget {
+  const DonationFormScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Confirm Donation'),
+        title: const Text("Review Donation"),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/donor-dashboard'),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Food Description (from AI)',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _descriptionController,
-              maxLines: 5,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Details about the food...',
+            // Mock Image Placeholder
+            Container(
+              height: 200,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(16),
+                image: const DecorationImage(
+                  // In a real app, this would be the File the user took
+                  image: NetworkImage('https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&q=80&w=800'),
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Pickup Location',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _locationController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'e.g., 123 Main St, near the park',
-              ),
-            ),
-            const Spacer(),
-            ElevatedButton(
-              onPressed: _isSubmitting ? null : _submitDonation,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-              child: _isSubmitting
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Post Donation', style: TextStyle(fontSize: 18)),
             ),
             const SizedBox(height: 24),
+            
+            const Text("AI Analysis Results", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            
+            // AI Results Card
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.green.shade100, width: 2),
+              ),
+              child: Column(
+                children: [
+                  _buildResultRow(Icons.fastfood, "Category", "Prepared Meals (Buffet)"),
+                  const Divider(height: 24),
+                  _buildResultRow(Icons.people, "Est. Meals", "Approx. 15-20 servings"),
+                  const Divider(height: 24),
+                  Row(
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.green),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Text("Quality Check", style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey)),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text("Safe to Donate", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 32),
+            const Text("Additional Details (Optional)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            
+            TextField(
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: "Add any specific pickup instructions or dietary notes (e.g., Contains nuts)",
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 40),
+            PrimaryButton(
+              text: "Confirm & Donate",
+              onPressed: () {
+                _showSuccessBottomSheet(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.grey.shade600),
+        const SizedBox(width: 16),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.grey)),
+        const Spacer(),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  void _showSuccessBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: Colors.green.shade50, shape: BoxShape.circle),
+              child: const Icon(Icons.check, color: Colors.green, size: 48),
+            ),
+            const SizedBox(height: 24),
+            const Text("Donation Listed!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text("NGOs and volunteers nearby have been notified.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 32),
+            PrimaryButton(
+              text: "Back to Dashboard",
+              onPressed: () {
+                Navigator.pop(context); // Close sheet
+                context.go('/donor-dashboard'); // Go home
+              },
+            ),
           ],
         ),
       ),
