@@ -18,6 +18,7 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   void initState() {
     super.initState();
+    print('>>> RUNNING FIXED CAMERA SCREEN <<<'); // Diagnostic print
     _setupCamera();
   }
 
@@ -25,15 +26,29 @@ class _CameraScreenState extends State<CameraScreen> {
     try {
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
-        setState(() => _errorMessage = 'No camera found on this device.');
+        setState(() {
+          _errorMessage = 'No camera found on this device.';
+        });
         return;
       }
-      _controller = CameraController(cameras.first, ResolutionPreset.high);
+      
+      _controller = CameraController(
+        cameras.first, 
+        ResolutionPreset.high,
+        enableAudio: false, 
+      );
+      
       final future = _controller!.initialize();
-      setState(() => _initializeControllerFuture = future);
+      
+      setState(() {
+        _initializeControllerFuture = future;
+      });
+      
       await future;
     } catch (e) {
-      setState(() => _errorMessage = 'Could not start camera: $e');
+      setState(() {
+        _errorMessage = 'Could not start camera: $e';
+      });
     }
   }
 
@@ -45,24 +60,28 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Future<void> _captureAndContinue() async {
     if (_controller == null || _isCapturing) return;
-    setState(() => _isCapturing = true);
+    
+    setState(() {
+      _isCapturing = true;
+    });
 
     try {
       await _initializeControllerFuture;
       final image = await _controller!.takePicture();
-
       if (!mounted) return;
-      // Hand the captured photo back to the caller (Create Donation screen),
-      // same shape as the gallery picker result — keeps both entry points consistent.
       context.pop(image.path);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not capture photo: $e')),
+          SnackBar(content: Text('Could not capture photo: $e'))
         );
       }
     } finally {
-      if (mounted) setState(() => _isCapturing = false);
+      if (mounted) {
+        setState(() {
+          _isCapturing = false;
+        });
+      }
     }
   }
 
@@ -71,21 +90,12 @@ class _CameraScreenState extends State<CameraScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Capture Food Donation'),
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+        title: const Text('Capture Food'), 
+        backgroundColor: Colors.black, 
+        foregroundColor: Colors.white
       ),
       body: _errorMessage != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Text(
-                  _errorMessage!,
-                  style: const TextStyle(color: Colors.white),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            )
+          ? Center(child: Text(_errorMessage!, style: const TextStyle(color: Colors.white)))
           : FutureBuilder<void>(
               future: _initializeControllerFuture,
               builder: (context, snapshot) {
@@ -94,13 +104,7 @@ class _CameraScreenState extends State<CameraScreen> {
                     alignment: Alignment.center,
                     children: [
                       CameraPreview(_controller!),
-                      if (_isCapturing)
-                        Container(
-                          color: Colors.black54,
-                          child: const Center(
-                            child: CircularProgressIndicator(color: Colors.green),
-                          ),
-                        ),
+                      if (_isCapturing) const Center(child: CircularProgressIndicator(color: Colors.green)),
                     ],
                   );
                 } else {

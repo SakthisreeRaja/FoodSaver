@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:foodsaver/models/donation.dart';
-import 'package:foodsaver/core/components/primary_button.dart';
-import 'package:foodsaver/core/components/custom_text_field.dart';
 import 'package:go_router/go_router.dart';
+import '../../../models/donation.dart';
+import '../../../core/components/primary_button.dart';
+import '../../../core/components/custom_text_field.dart';
 
 class EditDonationScreen extends StatefulWidget {
   final Donation donation;
@@ -10,7 +10,7 @@ class EditDonationScreen extends StatefulWidget {
   const EditDonationScreen({super.key, required this.donation});
 
   @override
-  _EditDonationScreenState createState() => _EditDonationScreenState();
+  State<EditDonationScreen> createState() => _EditDonationScreenState();
 }
 
 class _EditDonationScreenState extends State<EditDonationScreen> {
@@ -37,8 +37,6 @@ class _EditDonationScreenState extends State<EditDonationScreen> {
 
   void _saveChanges() {
     if (_formKey.currentState!.validate()) {
-      // In a real app, you would save the updated donation object here.
-      // For this frontend-only version, we'll just pop the screen.
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Donation updated successfully!')),
       );
@@ -49,10 +47,7 @@ class _EditDonationScreenState extends State<EditDonationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Donation'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Edit Donation'), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -62,24 +57,21 @@ class _EditDonationScreenState extends State<EditDonationScreen> {
             children: <Widget>[
               CustomTextField(
                 controller: _foodNameController,
-                label: 'Food Name', 
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Please enter a food name' : null,
+                label: 'Food Name',
+                validator: (value) => value == null || value.isEmpty ? 'Please enter a food name' : null,
               ),
               const SizedBox(height: 16),
               CustomTextField(
                 controller: _descriptionController,
-                label: 'Description', 
+                label: 'Description',
                 maxLines: 3,
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Please enter a description' : null,
+                validator: (value) => value == null || value.isEmpty ? 'Please enter a description' : null,
               ),
               const SizedBox(height: 16),
               CustomTextField(
                 controller: _locationController,
-                label: 'Pickup Location', 
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Please enter a location' : null,
+                label: 'Pickup Location',
+                validator: (value) => value == null || value.isEmpty ? 'Please enter a location' : null,
               ),
               const SizedBox(height: 32),
               PrimaryButton(

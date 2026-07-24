@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 class CustomTextField extends StatelessWidget {
   final String label;
-  final IconData? icon; 
+  final IconData? icon;
   final bool isPassword;
-  final TextEditingController? controller; 
-  final String? Function(String?)? validator; 
-  final int maxLines; 
+  final TextEditingController? controller;
+  final String? Function(String?)? validator;
+  final int maxLines;
 
   const CustomTextField({
     super.key,
@@ -24,7 +24,7 @@ class CustomTextField extends StatelessWidget {
       controller: controller,
       obscureText: isPassword,
       validator: validator,
-      maxLines: isPassword ? 1 : maxLines, 
+      maxLines: isPassword ? 1 : maxLines,
       decoration: InputDecoration(
         hintText: label,
         prefixIcon: icon != null ? Icon(icon, color: Colors.grey.shade500) : null,
