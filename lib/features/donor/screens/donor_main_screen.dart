@@ -13,8 +13,8 @@ class DonorMainScreen extends StatefulWidget {
 class _DonorMainScreenState extends State<DonorMainScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const DonorDashboardScreen(),
+  late final List<Widget> _screens = [
+    DonorDashboardScreen(onViewAllPressed: () => setState(() => _currentIndex = 1)),
     const Center(child: Text("Donation History (Coming Soon)")), // Placeholder
     const Center(child: Text("Profile (Coming Soon)")), // Placeholder
   ];

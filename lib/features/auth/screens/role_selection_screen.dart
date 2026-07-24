@@ -68,12 +68,18 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             ),
             PrimaryButton(
               text: "Continue",
-              onPressed: _selectedIndex == null 
-                  ? () {} // Disabled state logic can be added here
-                  : () {
-                      if (_selectedIndex == 0) context.go('/donor-dashboard');
-                      // Add NGO and Volunteer routes later
-                    },
+              enabled: _selectedIndex != null,
+              onPressed: () {
+                if (_selectedIndex == 0) {
+                  context.go('/donor-dashboard');
+                } else if (_selectedIndex == 1) {
+                  context.go('/ngo-dashboard');
+                } else if (_selectedIndex == 2) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Volunteer accounts are coming soon!")),
+                  );
+                }
+              },
             ),
           ],
         ),

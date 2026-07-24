@@ -29,7 +29,7 @@ class LoginScreen extends StatelessWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () => _showForgotPasswordDialog(context),
                   child: const Text("Forgot Password?", style: TextStyle(fontWeight: FontWeight.w600)),
                 ),
               ),
@@ -46,7 +46,7 @@ class LoginScreen extends StatelessWidget {
                 children: [
                   Text("Don't have an account? ", style: TextStyle(color: Colors.grey.shade600)),
                   TextButton(
-                    onPressed: () {}, // Navigate to register
+                    onPressed: () => context.push('/register'),
                     child: const Text("Sign Up", style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
@@ -54,6 +54,47 @@ class LoginScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showForgotPasswordDialog(BuildContext context) {
+    final emailController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Reset Password"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text("Enter your email address and we'll send you a reset link."),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: "Email Address",
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('If an account exists for "${emailController.text}", a reset link has been sent.')),
+              );
+            },
+            child: const Text("Send Link"),
+          ),
+        ],
       ),
     );
   }

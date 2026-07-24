@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class DonorDashboardScreen extends StatelessWidget {
-  const DonorDashboardScreen({super.key});
+  final VoidCallback? onViewAllPressed;
+
+  const DonorDashboardScreen({super.key, this.onViewAllPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +30,14 @@ class DonorDashboardScreen extends StatelessWidget {
               ],
             ),
             actions: [
-              IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {}),
+              IconButton(
+                icon: const Icon(Icons.notifications_none),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("No new notifications yet.")),
+                  );
+                },
+              ),
             ],
           ),
           SliverToBoxAdapter(
@@ -76,7 +85,7 @@ class DonorDashboardScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text("Active Donations", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      TextButton(onPressed: () {}, child: const Text("View All")),
+                      TextButton(onPressed: onViewAllPressed, child: const Text("View All")),
                     ],
                   ),
                   const SizedBox(height: 12),

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../services/ai_service.dart';
 
 class AiAnalyzingScreen extends StatefulWidget {
-  const AiAnalyzingScreen({super.key});
+  final String? imagePath;
+
+  const AiAnalyzingScreen({super.key, this.imagePath});
 
   @override
   State<AiAnalyzingScreen> createState() => _AiAnalyzingScreenState();
@@ -19,10 +22,30 @@ class _AiAnalyzingScreenState extends State<AiAnalyzingScreen> with SingleTicker
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    // Simulate AI network delay, then route to the form
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) context.go('/donation-form');
-    });
+    _runAnalysis();
+  }
+
+  Future<void> _runAnalysis() async {
+    final imagePath = widget.imagePath;
+
+    // Run the real Gemini analysis alongside a minimum display time, so the
+    // "Analyzing..." animation doesn't just flash by on a fast response.
+    final results = await Future.wait([
+      if (imagePath != null)
+        AiService.analyzeFoodImage(imagePath)
+      else
+        Future.value('No image was provided, so this is a placeholder result.'),
+      Future.delayed(const Duration(milliseconds: 1800)),
+    ]);
+
+    final analysisText = results[0] as String;
+
+    if (mounted) {
+      context.go('/donation-form', extra: {
+        'imagePath': imagePath,
+        'analysisText': analysisText,
+      });
+    }
   }
 
   @override

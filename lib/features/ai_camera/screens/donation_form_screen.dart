@@ -1,9 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/components/primary_button.dart';
 
 class DonationFormScreen extends StatelessWidget {
-  const DonationFormScreen({super.key});
+  final String? imagePath;
+  final String? analysisText;
+
+  const DonationFormScreen({super.key, this.imagePath, this.analysisText});
 
   @override
   Widget build(BuildContext context) {
@@ -20,16 +24,18 @@ class DonationFormScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Mock Image Placeholder
+            // Donated Food Image
             Container(
               height: 200,
               width: double.infinity,
               decoration: BoxDecoration(
                 color: Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(16),
-                image: const DecorationImage(
-                  // In a real app, this would be the File the user took
-                  image: NetworkImage('https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&q=80&w=800'),
+                image: DecorationImage(
+                  image: imagePath != null
+                      ? FileImage(File(imagePath!)) as ImageProvider
+                      // Fallback stock photo if no image was captured (e.g. deep-linked here)
+                      : const NetworkImage('https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&q=80&w=800'),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -38,41 +44,42 @@ class DonationFormScreen extends StatelessWidget {
             
             const Text("AI Analysis Results", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
-            
+
             // AI Results Card
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.green.shade100, width: 2),
-              ),
-              child: Column(
-                children: [
-                  _buildResultRow(Icons.fastfood, "Category", "Prepared Meals (Buffet)"),
-                  const Divider(height: 24),
-                  _buildResultRow(Icons.people, "Est. Meals", "Approx. 15-20 servings"),
-                  const Divider(height: 24),
-                  Row(
-                    children: [
-                      const Icon(Icons.check_circle, color: Colors.green),
-                      const SizedBox(width: 16),
-                      const Expanded(
-                        child: Text("Quality Check", style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey)),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade50,
-                          borderRadius: BorderRadius.circular(20),
+            Builder(builder: (context) {
+              final text = analysisText ?? 'No analysis available yet.';
+              final failed = text.startsWith('AI Analysis Failed');
+
+              return Container(
+                padding: const EdgeInsets.all(20),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: failed ? Colors.orange.shade100 : Colors.green.shade100, width: 2),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          failed ? Icons.error_outline : Icons.check_circle,
+                          color: failed ? Colors.orange : Colors.green,
                         ),
-                        child: const Text("Safe to Donate", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-                      ),
-                    ],
-                  )
-                ],
-              ),
-            ),
+                        const SizedBox(width: 12),
+                        Text(
+                          failed ? "Analysis Unavailable" : "Gemini Analysis",
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(text, style: TextStyle(color: Colors.grey.shade800, height: 1.5)),
+                  ],
+                ),
+              );
+            }),
             
             const SizedBox(height: 32),
             const Text("Additional Details (Optional)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -101,18 +108,6 @@ class DonationFormScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildResultRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.grey.shade600),
-        const SizedBox(width: 16),
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.grey)),
-        const Spacer(),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
-      ],
     );
   }
 

@@ -5,7 +5,13 @@ import 'core/routing/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (_) {
+    // .env is gitignored and holds your own GEMINI_API_KEY — it's fine if it's
+    // missing (e.g. on a fresh checkout); the app still runs, the AI analysis
+    // step will just report the key as missing instead of crashing at startup.
+  }
   // Firebase.initializeApp() is safely omitted for this pure UI testing phase
   
   runApp(const FoodSaverApp());
