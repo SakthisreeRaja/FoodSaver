@@ -62,24 +62,24 @@ class _EditDonationScreenState extends State<EditDonationScreen> {
             children: <Widget>[
               CustomTextField(
                 controller: _foodNameController,
-                labelText: 'Food Name',
+                label: 'Food Name', 
                 validator: (value) =>
-                    value!.isEmpty ? 'Please enter a food name' : null,
+                    value == null || value.isEmpty ? 'Please enter a food name' : null,
               ),
               const SizedBox(height: 16),
               CustomTextField(
                 controller: _descriptionController,
-                labelText: 'Description',
+                label: 'Description', 
                 maxLines: 3,
                 validator: (value) =>
-                    value!.isEmpty ? 'Please enter a description' : null,
+                    value == null || value.isEmpty ? 'Please enter a description' : null,
               ),
               const SizedBox(height: 16),
               CustomTextField(
                 controller: _locationController,
-                labelText: 'Pickup Location',
+                label: 'Pickup Location', 
                 validator: (value) =>
-                    value!.isEmpty ? 'Please enter a location' : null,
+                    value == null || value.isEmpty ? 'Please enter a location' : null,
               ),
               const SizedBox(height: 32),
               PrimaryButton(
