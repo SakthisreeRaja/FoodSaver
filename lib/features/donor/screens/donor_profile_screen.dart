@@ -1,108 +1,129 @@
 import 'package:flutter/material.dart';
-import 'package:foodsaver/core/components/statistic_card.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:foodsaver/core/components/user_profile_header.dart';
+import 'package:foodsaver/core/providers/service_providers.dart';
+import 'package:foodsaver/features/auth/screens/firebase_auth_service.dart';
 
-class DonorProfileScreen extends StatelessWidget {
+class DonorProfileScreen extends ConsumerWidget {
   const DonorProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userDonationsAsync = ref.watch(userDonationsProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Profile'),
         centerTitle: true,
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () {
-              context.push('/donor-settings');
-            },
+            onPressed: () => context.push('/donor-settings'),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
-          children: <Widget>[
-            const CircleAvatar(
-              radius: 50,
-              // Replace with a network image in a real app
-              backgroundColor: Colors.grey,
-              child: Icon(Icons.person, size: 50, color: Colors.white),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'John Doe', // Dummy data
-              style: GoogleFonts.lato(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'john.doe@example.com', // Dummy data
-              style: GoogleFonts.lato(fontSize: 16, color: Colors.grey[600]),
+          children: [
+            // Real user data
+            const UserProfileHeader(avatarIcon: Icons.volunteer_activism),
+            const SizedBox(height: 24),
+
+            // Stats from real donations
+            userDonationsAsync.when(
+              data: (donations) {
+                final completed =
+                    donations.where((d) => d['status'] == 'completed').length;
+                final active = donations
+                    .where((d) =>
+                        d['status'] == 'available' || d['status'] == 'claimed')
+                    .length;
+                final meals = donations.fold<int>(
+                    0, (s, d) => s + ((d['quantity'] as int?) ?? 0));
+                return _buildStats(context, completed, active, meals);
+              },
+              loading: () =>
+                  const Center(child: CircularProgressIndicator()),
+              error: (_, __) => _buildStats(context, 0, 0, 0),
             ),
             const SizedBox(height: 24),
-            GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              children: const [
-                StatisticCard(
-                  title: 'Completed Donations',
-                  value: '12', // Dummy data
-                  icon: Icons.check_circle,
-                  color: Colors.green,
-                ),
-                StatisticCard(
-                  title: 'Active Donations',
-                  value: '3', // Dummy data
-                  icon: Icons.local_shipping,
-                  color: Colors.blue,
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            _buildMenuList(context),
+            _buildMenuList(context, ref),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMenuList(BuildContext context) {
-    return Column(
+  Widget _buildStats(
+      BuildContext context, int completed, int active, int meals) {
+    return Row(
       children: [
-        _buildMenuListItem(context,
-            icon: Icons.history,
-            title: 'Donation History',
-            onTap: () => context.push('/donation-history')),
-        _buildMenuListItem(context,
-            icon: Icons.edit,
-            title: 'Edit Profile',
-            onTap: () => context.push('/edit-profile')), // To be created
-        _buildMenuListItem(context,
-            icon: Icons.help_outline,
-            title: 'Help & Support',
-            onTap: () => context.push('/help-support')), // To be created
-        _buildMenuListItem(context,
-            icon: Icons.logout, title: 'Logout', onTap: () => context.go('/login'), isLogout: true),
+        Expanded(child: _statCard(context, '$completed', 'Completed', Colors.green)),
+        const SizedBox(width: 12),
+        Expanded(child: _statCard(context, '$active', 'Active', Colors.blue)),
+        const SizedBox(width: 12),
+        Expanded(child: _statCard(context, '$meals', 'Meals', Colors.orange)),
       ],
     );
   }
 
-  Widget _buildMenuListItem(BuildContext context,
-      {required IconData icon,
-      required String title,
-      required VoidCallback onTap,
-      bool isLogout = false}) {
+  Widget _statCard(BuildContext context, String value, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
+        children: [
+          Text(value,
+              style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: color)),
+          const SizedBox(height: 4),
+          Text(label,
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuList(BuildContext context, WidgetRef ref) {
+    return Column(
+      children: [
+        _tile(context, Icons.history, 'Donation History',
+            () => context.push('/donation-history')),
+        _tile(context, Icons.map_outlined, 'View Map',
+            () => context.push('/donor-dashboard')),
+        _tile(context, Icons.help_outline, 'Help & Support',
+            () => context.push('/help-support')),
+        _tile(context, Icons.logout, 'Logout', () async {
+          await FirebaseAuthService.signOut();
+          if (context.mounted) context.go('/login');
+        }, isLogout: true),
+      ],
+    );
+  }
+
+  Widget _tile(BuildContext context, IconData icon, String title,
+      VoidCallback onTap,
+      {bool isLogout = false}) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: Icon(icon, color: isLogout ? Colors.red : Theme.of(context).primaryColor),
-        title: Text(title, style: GoogleFonts.lato(fontWeight: FontWeight.w600, color: isLogout ? Colors.red : null)),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        leading: Icon(icon,
+            color: isLogout ? Colors.red : Theme.of(context).colorScheme.primary),
+        title: Text(title,
+            style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: isLogout ? Colors.red : null)),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 14),
         onTap: onTap,
       ),
     );

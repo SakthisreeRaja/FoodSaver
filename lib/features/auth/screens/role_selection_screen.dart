@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/components/primary_button.dart';
+import 'firebase_auth_service.dart';
 
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({super.key});
@@ -11,11 +12,12 @@ class RoleSelectionScreen extends StatefulWidget {
 
 class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   int? _selectedIndex;
+  bool _isSaving = false;
 
   final List<Map<String, dynamic>> _roles = [
     {"title": "Donor", "desc": "I want to donate excess food", "icon": Icons.restaurant},
     {"title": "NGO", "desc": "I want to receive and distribute", "icon": Icons.business},
-    {"title": "Volunteer", "desc": "I want to help with deliveries", "icon": Icons.directions_bike},
+    {"title": "Delivery Partner", "desc": "I deliver food donations", "icon": Icons.delivery_dining},
   ];
 
   @override
@@ -67,23 +69,50 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
               ),
             ),
             PrimaryButton(
-              text: "Continue",
+              text: _isSaving ? "Saving..." : "Continue",
               enabled: _selectedIndex != null,
-              onPressed: () {
-                if (_selectedIndex == 0) {
-                  context.go('/donor-dashboard');
-                } else if (_selectedIndex == 1) {
-                  context.go('/ngo-dashboard');
-                } else if (_selectedIndex == 2) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Volunteer accounts are coming soon!")),
-                  );
-                }
-              },
+              isLoading: _isSaving,
+              onPressed: _handleContinue,
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _handleContinue() async {
+    final selectedIndex = _selectedIndex;
+    if (selectedIndex == null) return;
+
+    // Map display title to Firestore role key
+    final title = (_roles[selectedIndex]['title'] as String);
+    final role = title == 'Delivery Partner' ? 'delivery_partner' : title.toLowerCase();
+    setState(() => _isSaving = true);
+
+    try {
+      await FirebaseAuthService.updateCurrentUserRole(role);
+
+      if (!mounted) return;
+      switch (role) {
+        case 'donor':
+          context.go('/donor-dashboard');
+          break;
+        case 'ngo':
+          context.go('/ngo-dashboard');
+          break;
+        case 'delivery_partner':
+          context.go('/dp-dashboard');
+          break;
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
   }
 }
